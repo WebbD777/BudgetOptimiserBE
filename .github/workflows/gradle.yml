@@ -32,7 +32,7 @@ jobs:
 #      - name: Check Java code formatting
 #        run: ./gradlew spotlessCheck
 
-      Builds the jar file but skips running unit tests
+      # Builds the jar file but skips running unit tests
       - name: Build with Gradle (skipping tests)
         run: ./gradlew build -x test
 
