@@ -41,7 +41,8 @@ public class Category {
     this.budget = budget;
     this.costType = costType;
   }
-  public Category(){}
+
+  public Category() {}
 
   public Long getId() {
     return id;

@@ -1,8 +1,8 @@
 package co.za.dylanwebb.budgetoptimiserbe.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "spending")
@@ -37,18 +37,43 @@ public class Spending {
   }
 
   // Getters and Setters
-  public Long getId() { return id; }
-  public void setId(Long id) { this.id = id; }
+  public Long getId() {
+    return id;
+  }
 
-  public LocalDateTime getDateTime() { return dateTime; }
-  public void setDateTime(LocalDateTime dateTime) { this.dateTime = dateTime; }
+  public void setId(Long id) {
+    this.id = id;
+  }
 
-  public float getAmount() { return amount; }
-  public void setAmount(float amount) { this.amount = amount; }
+  public LocalDateTime getDateTime() {
+    return dateTime;
+  }
 
-  public Category getCategory() { return category; }
-  public void setCategory(Category category) { this.category = category; }
+  public void setDateTime(LocalDateTime dateTime) {
+    this.dateTime = dateTime;
+  }
 
-  public LocalDateTime getCreatedAt() { return createdAt; }
-  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+  public float getAmount() {
+    return amount;
+  }
+
+  public void setAmount(float amount) {
+    this.amount = amount;
+  }
+
+  public Category getCategory() {
+    return category;
+  }
+
+  public void setCategory(Category category) {
+    this.category = category;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 }
