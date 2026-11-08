@@ -6,13 +6,14 @@ plugins {
 
 spotless {
     java {
-        googleJavaFormat('1.24.0')
+        googleJavaFormat('1.35.0')
 
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
     }
 }
+
 
 group = 'co.za.dylanwebb'
 version = '0.0.1-SNAPSHOT'
