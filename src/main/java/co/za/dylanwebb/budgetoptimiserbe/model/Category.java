@@ -20,10 +20,25 @@ public class Category {
   @Column(nullable = false)
   private float budget;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private CostType costType;
+
+  public enum CostType {
+    FIXED,
+    VARIABLE
+  }
+
   @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<Spending> spendings = new ArrayList<>();
 
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
+
+  public Category(String categoryName, float budget, CostType costType) {
+    this.name = categoryName;
+    this.budget = budget;
+    this.costType = costType;
+  }
 }
