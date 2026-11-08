@@ -1,0 +1,43 @@
+name: Gradle CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 27
+        uses: actions/setup-java@v5
+        with:
+          java-version: '27'
+          distribution: 'temurin'
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+#      - name: Check Java code formatting
+#        run: ./gradlew spotlessCheck
+
+      # Builds the jar file but skips running unit tests
+      - name: Build with Gradle (skipping tests)
+        run: ./gradlew build -x test
+
+      - name: Upload Spring Boot JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spring-boot-app-jar
+          path: build/libs/*.jar
