@@ -42,4 +42,36 @@ public class Category {
     this.costType = costType;
   }
   public Category(){}
+
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public String getCategoryName() {
+    return name;
+  }
+
+  public void setCategoryName(String categoryName) {
+    this.name = categoryName;
+  }
+
+  public float getBudget() {
+    return budget;
+  }
+
+  public void setBudget(float budget) {
+    this.budget = budget;
+  }
+
+  public CostType getCostType() {
+    return costType;
+  }
+
+  public void setCostType(CostType costType) {
+    this.costType = costType;
+  }
 }
