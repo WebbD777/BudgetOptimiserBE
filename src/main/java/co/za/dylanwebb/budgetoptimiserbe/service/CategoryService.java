@@ -15,14 +15,11 @@ public class CategoryService {
     this.categoryRepository = categoryRepository;
   }
 
-  // CREATE operation using built-in .save()
   public void createCategory(CategoryDTO categoryDTO) {
     Category category =
         new Category(categoryDTO.getCategory(), categoryDTO.getBudget(), categoryDTO.getCostType());
     categoryRepository.save(category);
   }
-
-  // READ operation using built-in .findAll()
   public List<Category> fetchAllCategories() {
     return categoryRepository.findAll();
   }
