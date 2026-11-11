@@ -26,17 +26,14 @@ public class Spending {
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
 
-  // Default constructor
   public Spending() {}
 
-  // Parameterised constructor matching Service logic
   public Spending(LocalDateTime dateTime, float amount, Category category) {
     this.dateTime = dateTime;
     this.amount = amount;
     this.category = category;
   }
 
-  // Getters and Setters
   public Long getId() {
     return id;
   }

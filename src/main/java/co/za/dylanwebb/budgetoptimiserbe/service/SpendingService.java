@@ -15,7 +15,7 @@ public class SpendingService {
   private final CategoryRepository categoryRepository;
 
   public SpendingService(
-      SpendingRepository spendingRepository, CategoryRepository categoryRepository) {
+      SpendingRepository spendingRepository) {
     this.spendingRepository = spendingRepository;
     this.categoryRepository = categoryRepository;
   }
