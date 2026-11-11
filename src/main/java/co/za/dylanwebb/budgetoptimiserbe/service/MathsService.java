@@ -1,12 +1,12 @@
 package co.za.dylanwebb.budgetoptimiserbe.service;
 
+import co.za.dylanwebb.budgetoptimiserbe.model.Category;
 import co.za.dylanwebb.budgetoptimiserbe.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class MathsService {
@@ -20,9 +20,22 @@ public class MathsService {
     }
 
     public List<String> runMCSimulation() throws IOException, InterruptedException {
+
+        // getting the budgets
+        List<BudgetRecord> budgetRecordList = new ArrayList<>();
+        Map<String, Object> budgetData = new LinkedHashMap<>();
+
         CategoryService categoryService = new CategoryService(categoryRepository);
         var categories = categoryService.fetchAllCategories();
 
+        int count = 0;
+        for (Category row: categories){
+            budgetData.put(row.getCategoryName(), row.getBudget());
+
+            budgetRecordList.add(new BudgetRecord(row.getCategoryName(), row.getBudget(), row.getId()));
+        }
+
+        // getting the spendings
 
         List<String> command = List.of(pythonExecutable, scriptPath);
         ProcessBuilder processBuilder = new ProcessBuilder(command);
