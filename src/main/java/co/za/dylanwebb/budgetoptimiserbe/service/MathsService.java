@@ -1,5 +1,6 @@
 package co.za.dylanwebb.budgetoptimiserbe.service;
 
+import co.za.dylanwebb.budgetoptimiserbe.dto.MonteCarloDTO;
 import co.za.dylanwebb.budgetoptimiserbe.model.Category;
 import co.za.dylanwebb.budgetoptimiserbe.model.Spending;
 import co.za.dylanwebb.budgetoptimiserbe.repository.CategoryRepository;
@@ -27,23 +28,24 @@ public class MathsService {
 
         // getting the budgets
         List<BudgetRecord> budgetRecordList = new ArrayList<>();
-        Map<String, Object> budgetData = new LinkedHashMap<>();
+        Map<String, Double> budgetData = new LinkedHashMap<>();
 
         CategoryService categoryService = new CategoryService(categoryRepository);
         var categories = categoryService.fetchAllCategories();
 
         for (Category row: categories){
-            budgetData.put(row.getCategoryName(), row.getBudget());
+            budgetData.put(row.getCategoryName(), (double) row.getBudget());
             budgetRecordList.add(new BudgetRecord(row.getCategoryName(), row.getBudget(), row.getId()));
         }
 
         // getting the spendings
 
-        SpendingService spendingService = new SpendingService(spendingRepository);
+        SpendingService spendingService = new SpendingService(spendingRepository, categoryRepository);
         var spendings = spendingService.fetchAllSpending();
 
         Map<String, List<Double>> historicalData = new LinkedHashMap<>();
 
+        // build data
         for (Spending spending : spendings) {
 
             String category = spending.getCategory().getCategoryName();
@@ -55,26 +57,74 @@ public class MathsService {
                     .add(amount);
         }
 
-        List<String> command = List.of(pythonExecutable, scriptPath);
-        ProcessBuilder processBuilder = new ProcessBuilder(command);
+        // Send to python
+
+        // ---------------------------------------
+        // 3. Package data
+        // ---------------------------------------
+
+        MonteCarloDTO request =
+                new MonteCarloDTO(historicalData, budgetData);
+
+        // ---------------------------------------
+        // 4. Convert to JSON
+        // ---------------------------------------
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        String jsonInput = objectMapper.writeValueAsString(request);
+
+        // ---------------------------------------
+        // 5. Start Python process
+        // ---------------------------------------
+
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                pythonExecutable,
+                scriptPath
+        );
+
         processBuilder.redirectErrorStream(true);
 
         Process process = processBuilder.start();
 
+        // ---------------------------------------
+        // 6. Send JSON to Python
+        // ---------------------------------------
+
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(process.getOutputStream()))) {
+
+            writer.write(jsonInput);
+            writer.flush();
+        }
+
+        // ---------------------------------------
+        // 7. Read Python output
+        // ---------------------------------------
+
         StringBuilder pythonOutput = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()))) {
+
             String line;
+
             while ((line = reader.readLine()) != null) {
                 pythonOutput.append(line).append("\n");
             }
         }
 
         int exitCode = process.waitFor();
+
         if (exitCode != 0) {
-            throw new RuntimeException("Python execution failed. Log: " + pythonOutput);
+            throw new RuntimeException(
+                    "Python execution failed: " + pythonOutput
+            );
         }
 
-        return Collections.singletonList(pythonOutput.toString().trim());
+        return Collections.singletonList(
+                pythonOutput.toString().trim()
+        );
     }
 }
 
