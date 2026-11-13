@@ -5,18 +5,18 @@ import java.util.Map;
 
 public class MonteCarloDTO {
 
-    private Map<String, List<Double>> historicalData;
+    private Map<String, Map<String, Double>> historicalData;
     private Map<String, Double> budgets;
 
     public MonteCarloDTO(
-            Map<String, List<Double>> historicalData,
+            Map<String, Map<String, Double>> historicalData,
             Map<String, Double> budgets) {
 
         this.historicalData = historicalData;
         this.budgets = budgets;
     }
 
-    public Map<String, List<Double>> getHistoricalData() {
+    public Map<String, Map<String, Double>> getHistoricalData() {
         return historicalData;
     }
 

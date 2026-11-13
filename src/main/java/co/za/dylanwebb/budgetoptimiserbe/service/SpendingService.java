@@ -5,6 +5,10 @@ import co.za.dylanwebb.budgetoptimiserbe.model.Category;
 import co.za.dylanwebb.budgetoptimiserbe.model.Spending;
 import co.za.dylanwebb.budgetoptimiserbe.repository.CategoryRepository;
 import co.za.dylanwebb.budgetoptimiserbe.repository.SpendingRepository;
+
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -38,5 +42,18 @@ public class SpendingService {
 
   public List<Spending> fetchAllSpending() {
     return spendingRepository.findAll();
+  }
+  public List<Spending> fetchSpendingByMonthRange(
+          int startYear,
+          int startMonth,
+          int endYear,
+          int endMonth) {
+
+    LocalDate startDate = LocalDate.of(startYear, startMonth, 1);
+
+    LocalDate endDate = YearMonth.of(endYear, endMonth)
+            .atEndOfMonth();
+
+    return spendingRepository.findByDateBetween(startDate, endDate);
   }
 }

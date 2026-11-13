@@ -1,6 +1,8 @@
 package co.za.dylanwebb.budgetoptimiserbe.model;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -25,6 +27,8 @@ public class Spending {
   @CreationTimestamp
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
+
+  private LocalDate date;
 
   public Spending() {}
 
@@ -68,6 +72,9 @@ public class Spending {
 
   public LocalDateTime getCreatedAt() {
     return createdAt;
+  }
+  public LocalDate getDate() {
+    return date;
   }
 
   public void setCreatedAt(LocalDateTime createdAt) {

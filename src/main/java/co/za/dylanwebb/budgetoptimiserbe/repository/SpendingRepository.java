@@ -13,4 +13,6 @@ public interface SpendingRepository extends JpaRepository<Spending, Long> {
             LocalDate startDate,
             LocalDate endDate
     );
+
+    List<Spending> findAll();
 }

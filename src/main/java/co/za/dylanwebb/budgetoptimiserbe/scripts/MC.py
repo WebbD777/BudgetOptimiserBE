@@ -11,34 +11,30 @@ import pandas as pd
 input_data = json.load(sys.stdin)
 
 budgets = input_data["budgets"]
-spendings = input_data["historicalData"]
+historical_data = input_data["historicalData"]
 
-# ---------------------------------------------------------
-# 2. Convert historical spending into a DataFrame
-# ---------------------------------------------------------
+if not budgets:
+    raise ValueError("No budget data received.")
 
-df_spending = pd.DataFrame(spendings)
-
-if df_spending.empty:
+if not historical_data:
     raise ValueError("No historical spending data received.")
 
-df_spending["date"] = pd.to_datetime(df_spending["date"])
+# ---------------------------------------------------------
+# 2. Convert monthly historical spending into a DataFrame
+# ---------------------------------------------------------
 
-# Extract month and year
-df_spending["Month"] = (
-    df_spending["date"].dt.to_period("M").astype(str)
+# Java sends:
+# {
+#     "2026-10": {"Food": 1000, "Transport": 300},
+#     "2026-11": {"Food": 1200, "Transport": 400}
+# }
+
+df_history = pd.DataFrame.from_dict(
+    historical_data,
+    orient="index"
 )
 
-# Aggregate spending by month and category
-df_history = df_spending.pivot_table(
-    index="Month",
-    columns="category",
-    values="amount",
-    aggfunc="sum",
-    fill_value=0
-)
-
-# Ensure every budget category exists in historical data
+# Ensure every budget category exists
 expense_categories = list(budgets.keys())
 
 df_history = df_history.reindex(
@@ -46,7 +42,24 @@ df_history = df_history.reindex(
     fill_value=0
 )
 
-df_history = df_history.reset_index()
+# Replace any missing values with zero
+df_history = df_history.fillna(0)
+
+# Convert values to numeric
+df_history = df_history.astype(float)
+
+# Sort months chronologically
+df_history.index = pd.to_datetime(
+    df_history.index,
+    format="%Y-%m"
+)
+
+df_history = df_history.sort_index()
+
+if df_history.empty:
+    raise ValueError("Historical spending DataFrame is empty.")
+
+number_of_months = len(df_history)
 
 # ---------------------------------------------------------
 # 3. Generate empirical distributions
@@ -54,18 +67,28 @@ df_history = df_history.reset_index()
 
 empirical_data = {}
 
-for col in expense_categories:
+for category in expense_categories:
 
-    value_counts = df_history[col].value_counts().sort_index()
+    historical_values = df_history[category].values
 
-    empirical_data[col] = {
-        "values": value_counts.index.tolist(),
-        "probs": (value_counts / len(df_history)).tolist()
+    # Count the frequency of each monthly spending amount
+    value_counts = pd.Series(historical_values).value_counts().sort_index()
+
+    probabilities = value_counts / len(historical_values)
+
+    empirical_data[category] = {
+        "values": value_counts.index.to_numpy(dtype=float),
+        "probs": probabilities.to_numpy(dtype=float)
     }
 
 # ---------------------------------------------------------
-# 4. Allocated target budgets
+# 4. Calculate total budget
 # ---------------------------------------------------------
+
+budgets = {
+    category: float(amount)
+    for category, amount in budgets.items()
+}
 
 total_budget = sum(budgets.values())
 
@@ -89,17 +112,19 @@ for category, dist in empirical_data.items():
 
 df_sim = pd.DataFrame(sim_data)
 
-df_sim["Total"] = df_sim.sum(axis=1)
+# Calculate total monthly simulated spending
+df_sim["Total"] = df_sim[expense_categories].sum(axis=1)
 
 # ---------------------------------------------------------
-# 6. Output Overrun Risk Dashboard
+# 6. Generate Overrun Risk Dashboard
 # ---------------------------------------------------------
 
 results = []
 
 for category in expense_categories + ["Total"]:
 
-    bgt = (
+    # Select the appropriate budget
+    budget = (
         total_budget
         if category == "Total"
         else budgets[category]
@@ -107,12 +132,16 @@ for category in expense_categories + ["Total"]:
 
     expenses = df_sim[category]
 
-    overrun_prob = (expenses > bgt).mean()
+    # Probability of exceeding budget
+    overrun_prob = float((expenses > budget).mean())
 
-    mean_exp = expenses.mean()
+    # Expected monthly spending
+    mean_exp = float(expenses.mean())
 
-    p90_exp = np.percentile(expenses, 90)
+    # 90th percentile spending
+    p90_exp = float(np.percentile(expenses, 90))
 
+    # Risk classification
     risk_label = (
         "HIGH RISK" if overrun_prob > 0.5
         else "MODERATE RISK" if overrun_prob > 0.1
@@ -121,14 +150,22 @@ for category in expense_categories + ["Total"]:
 
     results.append({
         "Category": category,
-        "Budget": round(float(bgt), 2),
-        "Simulated Mean": round(float(mean_exp), 2),
-        "90th Percentile (P90)": round(float(p90_exp), 2),
-        "Overrun Probability": round(float(overrun_prob), 4),
+        "Budget": round(budget, 2),
+        "Simulated Mean": round(mean_exp, 2),
+        "90th Percentile (P90)": round(p90_exp, 2),
+        "Overrun Probability": round(overrun_prob, 4),
         "Risk Assessment": risk_label
     })
 
-df_dashboard = pd.DataFrame(results)
+# ---------------------------------------------------------
+# 7. Return JSON to Spring Boot
+# ---------------------------------------------------------
 
-# Return JSON to Spring Boot
-print(df_dashboard.to_json(orient="records"))
+output = {
+    "numberOfHistoricalMonths": number_of_months,
+    "totalBudget": round(total_budget, 2),
+    "numberOfSimulations": num_trials,
+    "results": results
+}
+
+print(json.dumps(output))

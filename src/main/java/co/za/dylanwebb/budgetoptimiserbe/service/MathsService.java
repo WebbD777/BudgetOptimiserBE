@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.time.YearMonth;
 import java.util.*;
 
 @Service
@@ -33,7 +34,7 @@ public class MathsService {
         CategoryService categoryService = new CategoryService(categoryRepository);
         var categories = categoryService.fetchAllCategories();
 
-        for (Category row: categories){
+        for (Category row : categories) {
             budgetData.put(row.getCategoryName(), (double) row.getBudget());
             budgetRecordList.add(new BudgetRecord(row.getCategoryName(), row.getBudget(), row.getId()));
         }
@@ -41,43 +42,57 @@ public class MathsService {
         // getting the spendings
 
         SpendingService spendingService = new SpendingService(spendingRepository, categoryRepository);
-        var spendings = spendingService.fetchAllSpending();
+        var spendings = spendingService.fetchSpendingByMonthRange(2026, 11, 2026, 11);
 
-        Map<String, List<Double>> historicalData = new LinkedHashMap<>();
+        // 3. Initialize historical data
+        Map<String, Map<String, Double>> historicalData =
+                new LinkedHashMap<>();
 
-        // build data
-        for (Spending spending : spendings) {
+        String month = "2026-11";
 
-            String category = spending.getCategory().getCategoryName();
+        Map<String, Double> monthlyData = new LinkedHashMap<>();
 
-            Double amount = (double) spending.getAmount();
-
-            historicalData
-                    .computeIfAbsent(category, key -> new ArrayList<>())
-                    .add(amount);
+        // Initialize every category to zero
+        for (String category : budgetData.keySet()) {
+            monthlyData.put(category, 0.0);
         }
 
-        // Send to python
+        historicalData.put(month, monthlyData);
 
-        // ---------------------------------------
-        // 3. Package data
-        // ---------------------------------------
+        // 4. Aggregate spending by category
+        for (Spending spending : spendings) {
 
+            if (spending.getDate() == null ||
+                    spending.getCategory() == null) {
+                continue;
+            }
+
+            String categoryName =
+                    spending.getCategory().getCategoryName();
+
+            if (!monthlyData.containsKey(categoryName)) {
+                throw new IllegalArgumentException(
+                        "No budget found for category: " + categoryName
+                );
+            }
+
+            monthlyData.merge(
+                    categoryName,
+                    (double) spending.getAmount(),
+                    Double::sum
+            );
+        }
+
+        // 5. Package data into DTO
         MonteCarloDTO request =
                 new MonteCarloDTO(historicalData, budgetData);
 
-        // ---------------------------------------
-        // 4. Convert to JSON
-        // ---------------------------------------
-
+        // 6. Convert data to JSON
         ObjectMapper objectMapper = new ObjectMapper();
 
         String jsonInput = objectMapper.writeValueAsString(request);
 
-        // ---------------------------------------
-        // 5. Start Python process
-        // ---------------------------------------
-
+        // 7. Start Python process
         ProcessBuilder processBuilder = new ProcessBuilder(
                 pythonExecutable,
                 scriptPath
@@ -87,21 +102,15 @@ public class MathsService {
 
         Process process = processBuilder.start();
 
-        // ---------------------------------------
-        // 6. Send JSON to Python
-        // ---------------------------------------
-
+        // 8. Send JSON to Python
         try (BufferedWriter writer = new BufferedWriter(
                 new OutputStreamWriter(process.getOutputStream()))) {
 
             writer.write(jsonInput);
-            writer.flush();
+            writer.newLine();
         }
 
-        // ---------------------------------------
-        // 7. Read Python output
-        // ---------------------------------------
-
+        // 9. Read Python output
         StringBuilder pythonOutput = new StringBuilder();
 
         try (BufferedReader reader = new BufferedReader(
@@ -114,6 +123,7 @@ public class MathsService {
             }
         }
 
+        // 10. Check Python execution
         int exitCode = process.waitFor();
 
         if (exitCode != 0) {
@@ -126,8 +136,7 @@ public class MathsService {
                 pythonOutput.toString().trim()
         );
     }
-}
-
+    }
 
 //@Service
 //public class DataPipelineService {
