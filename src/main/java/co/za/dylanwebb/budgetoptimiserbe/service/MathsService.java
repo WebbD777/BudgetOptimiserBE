@@ -1,6 +1,7 @@
 package co.za.dylanwebb.budgetoptimiserbe.service;
 
 import co.za.dylanwebb.budgetoptimiserbe.model.Category;
+import co.za.dylanwebb.budgetoptimiserbe.model.Spending;
 import co.za.dylanwebb.budgetoptimiserbe.repository.CategoryRepository;
 import co.za.dylanwebb.budgetoptimiserbe.repository.SpendingRepository;
 import org.springframework.stereotype.Service;
@@ -33,14 +34,26 @@ public class MathsService {
 
         for (Category row: categories){
             budgetData.put(row.getCategoryName(), row.getBudget());
-
             budgetRecordList.add(new BudgetRecord(row.getCategoryName(), row.getBudget(), row.getId()));
         }
 
         // getting the spendings
 
         SpendingService spendingService = new SpendingService(spendingRepository);
-        var spedings = spendingService.fetchAllSpending();
+        var spendings = spendingService.fetchAllSpending();
+
+        Map<String, List<Double>> historicalData = new LinkedHashMap<>();
+
+        for (Spending spending : spendings) {
+
+            String category = spending.getCategory().getCategoryName();
+
+            Double amount = (double) spending.getAmount();
+
+            historicalData
+                    .computeIfAbsent(category, key -> new ArrayList<>())
+                    .add(amount);
+        }
 
         List<String> command = List.of(pythonExecutable, scriptPath);
         ProcessBuilder processBuilder = new ProcessBuilder(command);
