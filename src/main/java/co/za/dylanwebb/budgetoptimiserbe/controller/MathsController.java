@@ -21,8 +21,15 @@ public class MathsController {
     }
 
     @GetMapping("/monte-carlo")
-    public ResponseEntity<List<String>> getMonteCarloSim() throws IOException, InterruptedException {
-        List<String> monteCarlo = mathsService.runMCSimulation();
+    public ResponseEntity<List<String>> getMonteCarloSim(
+            @RequestParam int startYear,
+            @RequestParam int startMonth,
+            @RequestParam int endYear,
+            @RequestParam int endMonth
+    ) throws IOException, InterruptedException {
+        List<String> monteCarlo = mathsService.runMCSimulation(
+                startYear, startMonth, endYear, endMonth
+        );
         return new ResponseEntity<List<String>>(monteCarlo, HttpStatus.OK);
     }
 }

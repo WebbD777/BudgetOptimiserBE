@@ -25,7 +25,9 @@ public class MathsService {
         this.spendingRepository = spendingRepository;
     }
 
-    public List<String> runMCSimulation() throws IOException, InterruptedException {
+    public List<String> runMCSimulation(
+            int startYear, int startMonth, int endYear, int endMonth
+    ) throws IOException, InterruptedException {
 
         // getting the budgets
         List<BudgetRecord> budgetRecordList = new ArrayList<>();
@@ -42,7 +44,7 @@ public class MathsService {
         // getting the spendings
 
         SpendingService spendingService = new SpendingService(spendingRepository, categoryRepository);
-        var spendings = spendingService.fetchSpendingByMonthRange(2026, 11, 2026, 11);
+        var spendings = spendingService.fetchSpendingByMonthRange(startYear, startMonth, endYear, endMonth);
 
         // 3. Initialize historical data
         Map<String, Map<String, Double>> historicalData =
