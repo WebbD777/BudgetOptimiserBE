@@ -1,5 +1,6 @@
 package co.za.dylanwebb.budgetoptimiserbe.model;
 
+import co.za.dylanwebb.budgetoptimiserbe.service.BudgetRecord;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public class Category {
 
   public Category() {}
 
-  public Long getId() {
+  public long getId() {
     return id;
   }
 

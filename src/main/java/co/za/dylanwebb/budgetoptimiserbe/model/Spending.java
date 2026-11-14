@@ -1,6 +1,8 @@
 package co.za.dylanwebb.budgetoptimiserbe.model;
 
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -26,17 +28,16 @@ public class Spending {
   @Column(name = "created_at", updatable = false)
   private LocalDateTime createdAt;
 
-  // Default constructor
+  private LocalDate date;
+
   public Spending() {}
 
-  // Parameterised constructor matching Service logic
   public Spending(LocalDateTime dateTime, float amount, Category category) {
     this.dateTime = dateTime;
     this.amount = amount;
     this.category = category;
   }
 
-  // Getters and Setters
   public Long getId() {
     return id;
   }
@@ -71,6 +72,9 @@ public class Spending {
 
   public LocalDateTime getCreatedAt() {
     return createdAt;
+  }
+  public LocalDate getDate() {
+    return date;
   }
 
   public void setCreatedAt(LocalDateTime createdAt) {
