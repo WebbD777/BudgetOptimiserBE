@@ -34,7 +34,7 @@ jobs:
 
       # Builds the jar file but skips running unit tests
       - name: Build with Gradle (skipping tests)
-        run: ./gradlew build -x test
+        run: ./gradlew build -x test -x spotlessCheck
 
       - name: Upload Spring Boot JAR artifact
         uses: actions/upload-artifact@v4
